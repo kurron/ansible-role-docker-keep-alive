@@ -1,4 +1,4 @@
 ---
 - hosts: remote
   roles:
-  - role: ../../ansible-role-docker-host
+  - role: ../../ansible-role-docker-keep-alive

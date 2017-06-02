@@ -34,10 +34,20 @@
 
 - name: Restart Health Check Service
   become: yes
-  systemd: state=restarted daemon_reload=yes name=docker-healthcheck
+  systemd: state=restarted daemon_reload=yes name=docker-healthcheck.service
   when: docker_keep_alive_install
 
-- name: Always Start Docker
+- name: Always Start Health Check Service
   become: yes
-  command: /bin/systemctl enable docker
+  command: /bin/systemctl enable docker-healthcheck.service
+  when: docker_keep_alive_install
+
+- name: Restart Health Check Timer
+  become: yes
+  systemd: state=restarted daemon_reload=yes name=docker-healthcheck.timer
+  when: docker_keep_alive_install
+
+- name: Always Start Health Check Timer
+  become: yes
+  command: /bin/systemctl enable docker-healthcheck.timer
   when: docker_keep_alive_install

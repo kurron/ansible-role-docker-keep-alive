@@ -2,6 +2,9 @@ Role Name
 =========
 
 Installation of systemd process that watches the health of the Docker daemon.
+This was created to help address Docker engines going away in a Kubernetes
+cluster.  See [this issue](https://github.com/kubernetes/kubernetes/issues/41916)
+for more details.
 
 Requirements
 ------------
