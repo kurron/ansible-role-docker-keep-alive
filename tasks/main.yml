@@ -1,0 +1,120 @@
+---
+- name: Create Docker Configuration Directory
+  become: yes
+  file:
+      path: /etc/systemd/system/docker.service.d
+      state: directory
+      mode: 0755
+  when: docker_engine_install
+
+- name: Determine Docker File System
+  become: no
+  set_fact:
+      docker_file_system: "{% if ansible_distribution == \"RedHat\" %}overlay{% else %}{{docker_engine_storage_driver}}{% endif %}"
+  when: docker_engine_install
+
+- name: Place Docker Configuration File
+  become: yes
+  template:
+      src: templates/root-dir.conf.j2
+      dest: /etc/systemd/system/docker.service.d/root-dir.conf
+      owner: root
+      group: root
+      mode: 444
+      backup: no
+  when: docker_engine_install
+
+- name: Download Docker Engine Installation Script
+  become: no
+  get_url:
+      url: "https://get.docker.com/"
+      dest: "{{ansible_user_dir}}/{{base_download_directory}}/docker-install.sh"
+      mode: 0554
+  when: docker_engine_install and docker_engine_install_via_script
+
+- name: Run Docker Engine Installer
+  become: yes
+  shell: "{{ansible_user_dir}}/{{base_download_directory}}/docker-install.sh"
+  args:
+      creates: /usr/bin/docker
+  when: docker_engine_install and docker_engine_install_via_script
+
+- name: Add Docker Engine Repository
+  become: yes
+  yum_repository:
+      name: docker-engine
+      description: Docker Engine Repository
+      baseurl: "https://yum.dockerproject.org/repo/main/centos/{{ ansible_distribution_major_version }}"
+      gpgcheck: yes
+      gpgkey: "https://yum.dockerproject.org/gpg"
+      state: present
+  when: docker_engine_install and (ansible_distribution == "RedHat") and (not docker_engine_install_via_script)
+  tags:
+      - debug
+
+- name: Install Docker Engine
+  become: yes
+  yum:
+    name: "docker-engine-{{ docker_engine_install_version }}"
+    state: present
+    update_cache: yes
+  when: docker_engine_install and (ansible_distribution == "RedHat") and (not docker_engine_install_via_script)
+  tags:
+      - debug
+
+- name: Save Non-Root User
+  become: no
+  set_fact:
+      standard_user: "{{ansible_user_id}}"
+  when: docker_engine_install
+
+- name: Add Non-Root User To Docker Group
+  become: yes
+  user:
+      name: "{{standard_user}}"
+      groups: docker
+      append: yes
+  when: docker_engine_install
+
+# TODO: when Ansible 2.2 comes out, switch to using this module instead
+#   - systemd: state=restarted daemon_reload=yes name=docker
+- name: Restart Docker
+  become: yes
+  shell: "/bin/systemctl daemon-reload && /bin/systemctl restart docker"
+  when: docker_engine_install
+
+- name: Always Start Docker
+  become: yes
+  command: /bin/systemctl enable docker
+  when: docker_engine_install
+
+- name: Test Docker
+  become: yes
+  command: /usr/bin/docker run --rm hello-world
+  when: docker_engine_install
+
+- name: Download Docker Compose Binary
+  become: yes
+  get_url:
+      url: "https://github.com/docker/compose/releases/download/{{docker_compose_version}}/docker-compose-Linux-x86_64"
+      dest: "/usr/local/bin/docker-compose"
+      mode: 0555
+  when: docker_compose_install
+
+- name: Test Docker Compose
+  become: no
+  shell: "/usr/local/bin/docker-compose --version"
+  when: docker_compose_install
+
+- name: Download Docker Machine Binary
+  become: yes
+  get_url:
+      url: "https://github.com/docker/machine/releases/download/v{{docker_machine_version}}/docker-machine-Linux-x86_64"
+      dest: "/usr/local/bin/docker-machine"
+      mode: 0555
+  when: docker_machine_install
+
+- name: Test Docker Machine
+  become: no
+  shell: "/usr/local/bin/docker-machine --version"
+  when: docker_machine_install
