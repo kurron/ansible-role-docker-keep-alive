@@ -1,6 +1,6 @@
 galaxy_info:
   author: Ronald D. Kurr
-  description: Docker engine and command-line tools. 
+  description: Systemd proces that watches the Docker daemon, ensuring its health.
   company: jvmguy.com
 
   license: Apache 2
@@ -31,9 +31,5 @@ galaxy_info:
     - xenial
 
   galaxy_tags:
-      - docker-machine
       - docker-engine
-      - docker-compose
-
-dependencies:
-    - { role: kurron.base }
+      - kubernetes

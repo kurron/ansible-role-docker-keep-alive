@@ -1,0 +1,10 @@
+[Unit]
+Description=Run docker-healthcheck once
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/docker-healthcheck
+
+[Install]
+WantedBy=multi-user.target

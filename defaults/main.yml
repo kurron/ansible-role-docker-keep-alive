@@ -1,13 +1,2 @@
 ---
-docker_engine_install: true
-docker_engine_install_via_script: true
-docker_engine_install_version: 17.04.0-ce
-docker_engine_graph: /var/lib/docker
-docker_engine_storage_driver: overlay2
-docker_engine_log_size: 1g
-
-docker_compose_install: true
-docker_compose_version: 1.12.0
-
-docker_machine_install: true
-docker_machine_version: 0.11.0
+docker_keep_alive_install: true
